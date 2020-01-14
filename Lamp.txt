@@ -1,0 +1,222 @@
+#############   Installation of lamp server #################
+
+Step1 : Install Apache server
+	apt install -y apache2
+
+Step2: Open the file location /var/www/html and edit the index.html page
+
+	edit as;
+	Hello This is Test Page
+Step3 : save the file
+
+Step 4: Change the location of the html page
+	for example vim /etc/apache2/apache2.conf
+	and edit as;
+	
+	<Directory "/var/www/html/">
+        Options FollowSymLinks
+        AllowOverride None
+        Require all granted
+	</Directory>
+	and save the file
+
+Step 5 : Restart and enable the apache 
+
+	systemctl restart apache2
+	systemctl enable apache2
+
+Step 6 :Install MySQL
+	apt install -y mysql-server
+
+Step 7 : when the installation is complete then run the following command
+	mysql_secure_installation
+
+	You will be asked during installation
+	(.) VALIDATE PASSWORD PLUGIN - NO
+	(.) and for rest do yes
+
+Step 8 : Install PHP
+	 apt install -y php*
+
+Step 9 : Configure the file
+	vim /etc/apache2/mods-enabled/dir.conf
+	edit as;
+	move the PHP index file highlighted above to the first position after the DirectoryIndex specification
+	(.) for example
+	<IfModule mod_dir.c>
+    	DirectoryIndex index.php index.html index.cgi index.pl index.xhtml index.htm
+	</IfModule>
+
+Step 10 : Restart the apache service
+	systemctl restart apache2
+
+Step 11 : create a file for php
+	 vim /var/www/html/info.php
+	
+	edit as;
+	<!DOCTYPE html>
+	<html>
+	<body>
+
+	<h1>My first PHP page</h1>
+
+	<?php
+	echo "Hello World!";
+	?>
+
+	</body>
+	</html>
+	 and save the file
+
+		OR
+	<?php
+ 	phpinfo ();
+	?>
+
+
+Step 12 : Test by running you ip and the fie name
+	http://10.100.100.136/info.php
+
+
+
+
+#######################   Insalling wordpress on lamp stack server    ########################
+
+
+
+Step 1 : Install WordPress
+	(.) cd /var/www/html
+	(.) Download the file - wget -c http://wordpress.org/latest.tar.gz
+	(.) Extract the file - tar -xzvf latest.tar.gz
+
+Step 2 : Give the ownership to apache server to acces the file
+	 ----  chown -R www-data:www-data /var/www/html/wordpress
+
+Step 3 : Create a database for WordPress
+	(.) Log in to Mysql server  -  mysql -u root -p
+
+Step 4 : Create the new database for the wordpress installation 
+	  Run the following command
+	(.) CREATE DATABASE wordpress_db;
+	(.) GRANT ALL PRIVILEGES ON wordpress_db.* TO 'wordpress_user'@'localhost' IDENTIFIED BY 'PASSWORD';
+	(.) FLUSH PRIVILEGES;
+	(.) exit;
+
+Step 5 : we will need to add the database information to the WordPress configuration file
+	Make sure you are inside the /var/www/html/wordpress directory and run the following commannd
+	(.) mv wp-config-sample.php wp-config.php
+	(.) open the wp-config.php file
+	  and edit the file as;
+	
+	(i) define('DB_NAME', 'wordpress_db');
+	(ii) define('DB_USER', 'wordpress_user');
+	(iii) define('DB_PASSWORD', 'PASSWORD');
+	and save the fie
+
+Step 6 : Restart your Apache and MySQL server
+	(.)systemctl restart apache2
+	(.) systemctl restart mysql
+
+Step 7 :  Apache Virtual Host Set Up
+	 run the following command to create the virtual host configuration file
+	  (.) vim /etc/apache2/sites-available/mydomain.com.conf
+	
+	  Add the following in your configuration file
+	   <VirtualHost *:80>
+
+	ServerAdmin admin@ubuntu18.com
+	ServerName ubuntu18.com
+	ServerAlias www.ubuntu18.com
+	DocumentRoot /var/www/html/wordpress
+
+	ErrorLog ${APACHE_LOG_DIR}/mydomain.com_error.log
+	CustomLog ${APACHE_LOG_DIR}/mydomain.com_access.log combined
+
+	</VirtualHost>
+
+	and save the file
+
+
+Step 8 : enable the virtual host
+	  a2ensite mydomain.com.conf
+
+Step 9 : Restart the apache file
+	   systemctl restart apache2
+
+
+Step 10 : Test the file in the web
+		http://ubuntu18.com
+			or
+		http://10.100.100.136/wordpress
+
+
+
+#######################    Install and configure Drupal on lamp server (including wordpress)    ####################
+
+
+Step 1 : Install MySQL
+	(.) mysql_secure_installation
+	(.) mysql -u root -p
+	  Create the database as below
+
+	(i) CREATE DATABASE drupal;
+	(ii) CREATE USER drupaluser@localhost IDENTIFIED BY 'new_password_here';
+	(iii) GRANT ALL ON drupal.* TO drupaluser@localhost;
+	(iv) FLUSH PRIVILEGES;
+	(v) exit;
+
+Step 2 : Download Drupal 
+
+	(.) cd /tmp
+	(.) wget ftp.drupal.org/files/projects/drupal-8.3.5.tar.gz
+
+Step 3 : Untar the file
+	tar xzvf drupal*
+
+Step 4 : move the file to /var/www/html
+	(.)mv drupal-8.3.5/* /var/www/html
+
+Step 5 : change the file permission and ownership of the root directory
+	(.) chmod -R 755 /var/www/html/*
+	(.) chown -R www-data:www-data /var/www/html/*
+
+Step 6 :  enable Apache2 modules by running the command 
+	(.) a2enmod rewrite
+	(.) a2enmod env
+	(.) a2enmod dir
+	(.) a2enmod mime
+
+Step 7 : Create the configuration file of drupal
+	(.)vim /etc/apache2/sites-enabled/drupal.conf
+		and edit as;
+	
+	<VirtualHost *:80>
+
+    	 ServerAdmin admin@example.com
+    	 DocumentRoot /var/www/html/
+     	ServerName example.com
+    	 ServerAlias www.example.com
+     	ErrorLog ${APACHE_LOG_DIR}/error.log
+    	 CustomLog ${APACHE_LOG_DIR}/access.log combined
+
+     	 <Directory /var/www/html/>
+           Options FollowSymlinks
+           AllowOverride All
+           Require all granted
+     	 </Directory>
+     	 <Directory /var/www/html/>
+           RewriteEngine on
+           RewriteBase /
+           RewriteCond %{REQUEST_FILENAME} !-f
+           RewriteCond %{REQUEST_FILENAME} !-d
+           RewriteRule ^(.*)$ index.php?q=$1 [L,QSA]
+     	 </Directory>
+
+
+	</VirtualHost>
+
+	and save the file
+
+
+Step 8 : Restart Apache2
+	 systemctl restart apache2

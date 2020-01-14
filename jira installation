@@ -1,0 +1,20 @@
+1.	 mysql -u root -p
+2.	CREATE DATABASE jira_db;
+3.	CREATE USER 'jira_user'@'localhost' IDENTIFIED BY 'Your_Password';
+4.	GRANT ALL PRIVILEGES ON jira_db.* TO 'jira_user'@'localhost' IDENTIFIED by 'Your_Password';
+5.	FLUSH PRIVILEGES;
+6.	 wget https://www.atlassian.com/software/jira/downloads/binary/atlassian-jira-software-7.8.2-x64.bin
+7.	chmod a+x atlassian-jira-software-7.8.2-x64.bin
+8.	./ atlassian-jira-software-7.8.2-x64.bin
+9.	apt install ufw
+10.	ufw allow 8181
+11.	ufw allow 8005
+12.	ufw allow 8080
+13.	ufw enable
+14.	ufw status
+15.	http://server-IP:8080
+16.	wget https://dev.mysql.com/get/archives/mysql-connector-java-5.1/mysql-connector-java-5.1.36.zip
+17.	unzip mysql-connector-java-5.1.36.zip
+18.	cp mysql-connector-java-5.1.36-bin.jar  /opt/atlassian/jira/lib
+19.	/etc/init.d/jira stop
+20.	/etc/init.d/jira start
